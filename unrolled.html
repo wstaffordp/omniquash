@@ -349,9 +349,9 @@
       .player,
       .player-weapon {
         background-color: #000000;
-        transition-duration: 0.04s, 0.04s;
-        transition-property: margin-left, margin-top;
-        transition-timing-function: steps(15, jump-none);
+        transition-duration: 0.05s, 0.05s, 0.04s, 0.04s;
+        transition-property: left, top, margin-left, margin-top;
+        transition-timing-function: steps(7, jump-none);
         z-index: 6;
       }
       .player-weapon {
@@ -478,6 +478,7 @@
     let player_weapon_use_delay_count = 0
     let player_weapon_use_delay_count_maximum = 8
     let player_weapon_use_id
+    let player_weapon_use_state = false
     let randomness = Date.now() & 65535
     let randomness_offset = randomness + 1111111
     let randomness_segmented_large_a = 0
@@ -620,6 +621,15 @@
     }
 
     const enemy_move = function(enemy_id) {
+      if (
+        enemy_move_states[enemy_id] == true ||
+        enemy_alive_states[enemy_id] == false
+      ) {
+        return
+      }
+
+      enemy_move_states[enemy_id] = true
+
       let enemy_offset_left_previous = enemy_offsets_left[enemy_id]
       let enemy_offset_left_next = enemy_offset_left_previous
       let enemy_offset_top_previous = enemy_offsets_top[enemy_id]
@@ -639,19 +649,11 @@
 
       enemy_offset_top_next += enemy_move_increment
 
-      if (
-        enemy_move_states[enemy_id] == true ||
-        enemy_alive_states[enemy_id] == false
-      ) {
-        return
-      }
-
       let enemy_segment_left_previous = 0
       let enemy_segment_left_next = 0
       let enemy_segment_top_previous = 0
       let enemy_segment_top_next = 0
 
-      enemy_move_states[enemy_id] = true
       enemy_elements[enemy_id].setAttribute("style", "left: " + enemy_offset_left_next + "px; top: " + enemy_offset_top_next + "px;")
       enemy_offsets_bottom[enemy_id] = enemy_offset_top_next + 29
       enemy_offsets_left[enemy_id] = enemy_offset_left_next
@@ -752,9 +754,10 @@
     const pieces_small_elements = Array(32)
 
     const player_die = function() {
+      clearInterval(player_weapon_use_id)
+
       let i = 0
 
-      clearInterval(player_weapon_use_id)
       player_alive_state = false
       player_element.setAttribute("class", "player-hidden")
       player_weapon_element.setAttribute("class", "player-weapon-hidden")
@@ -769,7 +772,7 @@
 
         clearInterval(play_restart_id)
 
-        const bounds_fade_out = setInterval(function() {
+        const bounds_fade_out_id = setInterval(function() {
           if (bounds_opacity > 0) {
             bounds_opacity -= 10
             bounds_element.setAttribute("style", "opacity: 0." + bounds_opacity + ";")
@@ -780,7 +783,7 @@
             return
           }
 
-          clearInterval(bounds_fade_out)
+          clearInterval(bounds_fade_out_id)
           i = 0
 
           while (i < enemies_count) {
@@ -800,33 +803,42 @@
           }
 
           clearInterval(enemies_initialize_id)
+          player_offset_left = 322
+          player_offset_top = 175
+          player_weapon_offset_increment_left = -17
+          player_weapon_offset_increment_top = -17
+          player_element.setAttribute("style", "left: 322px; top: 175px;")
+          clearInterval(player_id)
+          player_element.setAttribute("class", "element player")
+          player_weapon_element.setAttribute("class", "element player-weapon")
 
-          const bounds_fade_in_delay = setInterval(function() {
-            clearInterval(bounds_fade_in_delay)
+          const bounds_fade_in_delay_id = setInterval(function() {
+            clearInterval(bounds_fade_in_delay_id)
             clearInterval(player_id)
             enemies_count = 8
+
             player_weapon_use_id = setInterval(function() {
+              if (player_weapon_use_state == true) {
+                return
+              }
+
+              player_weapon_use_state = true
               player_weapon_equipped_use()
+              player_weapon_use_state = false
             }, 60)
-            player_offset_left = 322
-            player_offset_top = 175
-            player_weapon_offset_increment_left = -17
-            player_weapon_offset_increment_top = -17
-            player_element.setAttribute("style", "left: 322px; top: 175px;")
-            player_element.setAttribute("class", "element player")
-            player_weapon_element.setAttribute("class", "element player-weapon")
+
             player_alive_state = true
             bounds_opacity = 10
 
-            const bounds_fade_in = setInterval(function() {
+            const bounds_fade_in_id = setInterval(function() {
               if (bounds_opacity < 90) {
                 bounds_opacity += 10
                 bounds_element.setAttribute("style", "opacity: 0." + bounds_opacity + ";")
                 return
               }
 
+              clearInterval(bounds_fade_in_id)
               bounds_element.setAttribute("style", "")
-              clearInterval(bounds_fade_in)
               wave_initialize()
             }, 25)
           }, 500)
@@ -874,14 +886,14 @@
       }
 
       if (player_inputs[97] > 0) {
-        player_offset_left -= 2.3
+        player_offset_left -= 4
 
         if (player_offset_left < 6) {
           player_offset_left = 6
         }
 
         if (player_inputs[115] > 0) {
-          player_offset_top += 2.3
+          player_offset_top += 4
 
           if (player_offset_top > 356) {
             player_offset_top = 356
@@ -892,7 +904,7 @@
         }
 
         if (player_inputs[119] > 0) {
-          player_offset_top -= 2.3
+          player_offset_top -= 4
 
           if (player_offset_top < 6) {
             player_offset_top = 6
@@ -904,14 +916,14 @@
       }
 
       if (player_inputs[100] > 0) {
-        player_offset_left += 2.3
+        player_offset_left += 4
 
         if (player_offset_left > 650) {
           player_offset_left = 650
         }
 
         if (player_inputs[115] > 0) {
-          player_offset_top += 2.3
+          player_offset_top += 4
 
           if (player_offset_top > 356) {
             player_offset_top = 356
@@ -922,7 +934,7 @@
         }
 
         if (player_inputs[119] > 0) {
-          player_offset_top -= 2.3
+          player_offset_top -= 4
 
           if (player_offset_top < 6) {
             player_offset_top = 6
@@ -934,7 +946,7 @@
       }
 
       if (player_inputs[115] > 0) {
-        player_offset_top += 2.3
+        player_offset_top += 4
 
         if (player_offset_top > 356) {
           player_offset_top = 356
@@ -945,7 +957,7 @@
       }
 
       if (player_inputs[119] > 0) {
-        player_offset_top -= 2.3
+        player_offset_top -= 4
 
         if (player_offset_top < 6) {
           player_offset_top = 6
@@ -2492,7 +2504,10 @@
       let play_initialize_state = false
 
       const play_initialize = function() {
+        let bounds_opacity = 10
         let enemy_offsets_state = false
+        let i = 0
+        let j
         let pieces_elements_state = false
         let player_inputs_state = false
         let player_weapon_activated = 0
@@ -2501,10 +2516,11 @@
         let player_weapon_activation_zone_pulse_count = 0
         let player_weapon_activation_zone_size = 160
         let player_weapon_activation_zone_size_half = 80
-        let player_weapon_position_state = false
+        let player_weapon_position_state = true
         let randomness_state = false
 
         bounds_container_element.setAttribute("style", "left: " + ((innerWidth >> 1) - 336) + "px; top: " + ((innerHeight >> 1) - 189) + "px;")
+        bounds_element.setAttribute("style", "opacity: 0;")
 
         document.addEventListener(
           "keydown",
@@ -2531,9 +2547,6 @@
             player_inputs[event.key.charCodeAt(0)] = 0
           }
         )
-
-        let i = 0
-        let j
 
         while (i < 88) {
           enemy_elements[i] = bounds_element.appendChild(document.createElement("div"))
@@ -2615,7 +2628,7 @@
           player_inputs_weapon_use_state = (player_inputs[101] | player_inputs[105] | player_inputs[111] | player_inputs[112]) > 0
           player_move()
           player_inputs_state = false
-        }, 20)
+        }, 40)
 
         player_weapon_activation_zone_element.appendChild(document.createElement("div"))
         player_weapon_activation_zone_element.setAttribute("style", "left: 332px; top: -34px;")
@@ -2717,9 +2730,11 @@
           player_weapon_position_state = true
           player_weapon_position()
           player_weapon_position_state = false
-        }, 20)
+        }, 40)
 
+        player_weapon_position()
         player_weapon_element.setAttribute("class", "element player-weapon")
+        player_weapon_position_state = false
         bounds_element.appendChild(player_weapon_element)
         i = 0
 
@@ -2742,7 +2757,13 @@
         }
 
         player_weapon_use_id = setInterval(function() {
+          if (player_weapon_use_state == true) {
+            return
+          }
+
+          player_weapon_use_state = true
           player_weapon_equipped_use()
+          player_weapon_use_state = false
         }, 60)
 
         i = 0
@@ -2865,7 +2886,21 @@
           pieces_elements_state = false
         }, 250)
 
-        wave_initialize()
+        const bounds_fade_in_delay_id = setInterval(function() {
+          clearInterval(bounds_fade_in_delay_id)
+
+          const bounds_fade_in_id = setInterval(function() {
+            if (bounds_opacity < 90) {
+              bounds_opacity += 10
+              bounds_element.setAttribute("style", "opacity: 0." + bounds_opacity + ";")
+              return
+            }
+
+            clearInterval(bounds_fade_in_id)
+            bounds_element.setAttribute("style", "")
+            wave_initialize()
+          }, 45)
+        }, 200)
       }
 
       const play_initialize_id = setInterval(function() {
