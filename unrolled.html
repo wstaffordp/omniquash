@@ -2553,17 +2553,23 @@
             if (event.repeat == false) {
               if (event.key.indexOf("r") == 1) {
                 player_inputs[event.key.charCodeAt(6)] = 1
+                event.preventDefault()
                 return
               }
 
               player_inputs[event.key.charCodeAt(0)] = 1
+              return
             }
+
+            event.preventDefault()
           }
         )
 
         document.addEventListener(
           "keyup",
           function(event) {
+            event.preventDefault()
+
             if (event.key.indexOf("r") == 1) {
               player_inputs[event.key.charCodeAt(6)] = 0
               return
