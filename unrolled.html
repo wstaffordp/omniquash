@@ -111,6 +111,12 @@
           border-top-color: #ffffff;
           z-index: 6;
         }
+          .enemy.hit.strong:before {
+            background-color: #ffffff;
+          }
+          .enemy.hit.weak:before {
+            background-color: #aaaaaa;
+          }
       .pieces-large {
         z-index: 3;
       }
@@ -511,9 +517,10 @@
       const enemy_elements_id = setInterval(function() {
         clearInterval(enemy_elements_id)
         enemy_elements[enemy_id].classList.remove("hit")
-      }, 30)
+      }, 40)
 
       enemy_healths[enemy_id] -= enemy_damage
+      player_weapon_projectile_impact(enemy_offsets_left[enemy_id] | 0, enemy_offsets_top[enemy_id] | 0)
 
       if (
         enemy_healths[enemy_id] > 0 ||
@@ -528,10 +535,8 @@
 
       let enemy_segment = 0
       let i = 0
-      const enemy_offset_left = enemy_offsets_left[enemy_id] | 0
-      const enemy_offset_top = enemy_offsets_top[enemy_id] | 0
-      const enemy_offset_left_string = enemy_offset_left + ""
-      const enemy_offset_top_string = enemy_offset_top + ""
+      const enemy_offset_left_string = (enemy_offsets_left[enemy_id] | 0) + ""
+      const enemy_offset_top_string = (enemy_offsets_top[enemy_id] | 0) + ""
       const pieces_large_element_selector_offset = (randomness & 1) + (randomness_offset & 1) + 1
 
       const enemy_offsets_id = setInterval(function() {
@@ -542,24 +547,21 @@
         enemy_offsets_top[enemy_id] = -34
       }, 155)
 
-      player_weapon_projectile_impact(enemy_offset_left_string, enemy_offset_top_string)
-
-      if (enemy_offset_left > 15) {
-        enemy_segment = enemy_offset_left >> 4
+      if (enemy_offsets_left[enemy_id] > 15) {
+        enemy_segment = enemy_offsets_left[enemy_id] >> 4
         enemy_offsets_map_horizontal[enemy_segment - 1][enemy_id] = false
       }
 
       enemy_offsets_map_horizontal[enemy_segment][enemy_id] = false
       enemy_offsets_map_horizontal[enemy_segment + 1][enemy_id] = false
 
-      if (enemy_offset_top > 7) {
-        enemy_segment = enemy_offset_top >> 3
+      if (enemy_offsets_top[enemy_id] > 7) {
+        enemy_segment = enemy_offsets_top[enemy_id] >> 3
         enemy_offsets_map_vertical[enemy_segment - 1][enemy_id] = false
       }
 
       enemy_offsets_map_vertical[enemy_segment][enemy_id] = false
       enemy_offsets_map_vertical[enemy_segment + 1][enemy_id] = false
-      player_weapon_projectile_impact(enemy_offset_left_string, enemy_offset_top_string)
       enemy_healths[enemy_id] = 0
 
       while (i < pieces_large_elements_count) {
@@ -573,7 +575,17 @@
         }
 
         if (j == 63) {
-          return
+          if (i > 0) {
+            pieces_large_elements_count = 1
+            return
+          }
+
+          if (pieces_large_elements_count > 2) {
+            pieces_large_elements_count--
+          }
+
+          i = 1
+          continue
         }
 
         pieces_map_large_elements[j] = true
@@ -618,6 +630,8 @@
         bounds_element.setAttribute("class", "bounds element shake-large-" + i)
         i++
       }, 10)
+
+      player_weapon_projectile_impact(enemy_offset_left_string, enemy_offset_top_string)
     }
 
     const enemy_move = function(enemy_id) {
@@ -750,8 +764,8 @@
     const enemy_offsets_vertical = Array(57)
     const pieces_large_elements = Array(64)
     const pieces_map_large_elements = Array(64).fill(false)
-    const pieces_map_small_elements = Array(32).fill(false)
-    const pieces_small_elements = Array(32)
+    const pieces_map_small_elements = Array(64).fill(false)
+    const pieces_small_elements = Array(64)
 
     const player_die = function() {
       clearInterval(player_weapon_use_id)
@@ -856,6 +870,7 @@
         }
 
         if (j == 63) {
+          i++
           continue
         }
 
@@ -1144,17 +1159,27 @@
       let i = 0
 
       while (i < pieces_small_elements_count) {
-        let j = randomness_segmented_large_a
+        let j = randomness_segmented_medium_a
 
         while (
           pieces_map_small_elements[j] == true &&
-          j < 31
+          j < 63
         ) {
           j++
         }
 
-        if (j == 31) {
-          return
+        if (j == 63) {
+          if (i > 0) {
+            pieces_small_elements_count = 1
+            return
+          }
+
+          if (pieces_small_elements_count > 2) {
+            pieces_small_elements_count--
+          }
+
+          i = 1
+          continue
         }
 
         pieces_map_small_elements[j] = true
@@ -1180,7 +1205,7 @@
         i++
       }
 
-      if (pieces_small_elements_count > 3) {
+      if (pieces_small_elements_count > 2) {
         pieces_small_elements_count--
       }
     }
@@ -2557,7 +2582,7 @@
 
         i = 0
 
-        while (i < 32) {
+        while (i < 64) {
           pieces_large_elements[i] = document.createElement("div")
           pieces_large_elements[i].setAttribute("class", "pieces-large-hidden")
           pieces_small_elements[i] = document.createElement("div")
@@ -2576,31 +2601,6 @@
           }
 
           pieces_small_elements[i] = bounds_element.appendChild(pieces_small_elements[i])
-
-          while (j < 9) {
-            const pieces_large_element_child_element = document.createElement("div")
-
-            pieces_large_element_child_element.setAttribute("class", "pieces-large-" + j)
-            pieces_large_elements[i].appendChild(pieces_large_element_child_element)
-            j++
-          }
-
-          pieces_large_elements[i] = bounds_element.appendChild(pieces_large_elements[i])
-          i++
-        }
-
-        while (i < 64) {
-          pieces_large_elements[i] = document.createElement("div")
-          pieces_large_elements[i].setAttribute("class", "pieces-large-hidden")
-          j = 0
-
-          while (j < 3) {
-            const pieces_large_element_child_element = document.createElement("div")
-
-            pieces_large_element_child_element.setAttribute("class", "pieces-large-" + j)
-            pieces_large_elements[i].appendChild(pieces_large_element_child_element)
-            j++
-          }
 
           while (j < 9) {
             const pieces_large_element_child_element = document.createElement("div")
