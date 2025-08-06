@@ -35,6 +35,7 @@
       .enemy {
         background-color: #000000;
         transition-property: left, top;
+        transition-timing-function: steps(15, jump-none);
         z-index: 5;
       }
         .enemy:before {
@@ -54,16 +55,19 @@
           border-top-left-radius: 8px;
           border-top-right-radius: 8px;
         }
+        .enemy.burst:before {
+          height: 0;
+          width: 0;
+        }
         .enemy.strong {
           border-bottom-color: #bbbbbb;
           border-left-color: #bbbbbb;
           border-right-color: #bbbbbb;
           border-top-color: #bbbbbb;
           transition-duration: 0.2s, 0.2s;
-          transition-timing-function: steps(15, jump-none);
         }
           .enemy.strong:before {
-            background-color: #888888;
+            background-color: #848484;
           }
         .enemy.weak {
           border-bottom-color: #888888;
@@ -71,10 +75,9 @@
           border-right-color: #888888;
           border-top-color: #888888;
           transition-duration: 0.25s, 0.25s;
-          transition-timing-function: steps(15, jump-none);
         }
           .enemy.weak:before {
-            background-color: #333333;
+            background-color: #353535;
           }
       .enemy,
       .player {
@@ -531,21 +534,40 @@
 
       clearInterval(enemy_move_ids[enemy_id])
       enemy_alive_states[enemy_id] = false
-      enemy_elements[enemy_id].setAttribute("class", "")
+
+      const enemy_move_state_id = setInterval(function() {
+        if (enemy_move_states[enemy_id] == true) {
+          return
+        }
+
+        clearInterval(enemy_move_state_id)
+        enemy_elements[enemy_id].classList.add("burst")
+        enemy_elements[enemy_id].setAttribute(
+          "style",
+          "background-color: transparent; border-bottom-left-radius: 100px; border-bottom-right-radius: 100px; border-top-left-radius: 100px; "
+            + "border-top-right-radius: 100px; height: 80px; left: " + ((enemy_offsets_left[enemy_id] - 30) | 0) + "px; top: "
+            + ((enemy_offsets_top[enemy_id] - 30) | 0) + "px; transition-duration: 0.11s, 0.11s, 0.11s, 0.11s; transition-property: height, left, top, width; width: 80px;"
+        )
+
+        const enemy_burst_id = setInterval(function() {
+          clearInterval(enemy_burst_id)
+          enemy_elements[enemy_id].setAttribute("class", "")
+
+          const enemy_offsets_id = setInterval(function() {
+            clearInterval(enemy_offsets_id)
+            enemy_offsets_bottom[enemy_id] = -34
+            enemy_offsets_left[enemy_id] = -34
+            enemy_offsets_right[enemy_id] = -34
+            enemy_offsets_top[enemy_id] = -34
+          }, 140)
+        }, 110)
+      }, 50)
 
       let enemy_segment = 0
       let i = 0
       const enemy_offset_left_string = (enemy_offsets_left[enemy_id] | 0) + ""
       const enemy_offset_top_string = (enemy_offsets_top[enemy_id] | 0) + ""
       const pieces_large_element_selector_offset = (randomness & 1) + (randomness_offset & 1) + 1
-
-      const enemy_offsets_id = setInterval(function() {
-        clearInterval(enemy_offsets_id)
-        enemy_offsets_bottom[enemy_id] = -34
-        enemy_offsets_left[enemy_id] = -34
-        enemy_offsets_right[enemy_id] = -34
-        enemy_offsets_top[enemy_id] = -34
-      }, 155)
 
       if (enemy_offsets_left[enemy_id] > 15) {
         enemy_segment = enemy_offsets_left[enemy_id] >> 4
